@@ -12,6 +12,9 @@ const Signup = () => {
 
   const navigate = useNavigate();
 
+  // LIVE API URL
+  const API_URL = "https://a-f-clinic-a0cqgk99y-ahad-farooqs-projects.vercel.app";
+
   // List matching the Receptionist Dashboard precisely
   const doctorsList = [
     "Dr. Ahmed (Cardiologist)",
@@ -25,11 +28,12 @@ const Signup = () => {
   const handleSignup = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/signup', formData);
-      alert(res.data.message);
+      // Localhost ko Live URL se replace kiya
+      const res = await axios.post(`${API_URL}/api/auth/register`, formData);
+      alert(res.data.message || "✅ Registration Successful!");
       navigate('/');
     } catch (err) {
-      alert(err.response?.data?.message || 'Signup Failed');
+      alert(err.response?.data?.message || '❌ Signup Failed');
     }
   };
 
@@ -42,7 +46,7 @@ const Signup = () => {
         </div>
 
         <form onSubmit={handleSignup} className="space-y-5">
-          {/* ROLE SELECTION FIRST */}
+          {/* ROLE SELECTION */}
           <div className="space-y-1">
             <label className="block text-[10px] font-black text-slate-400 uppercase ml-2 mb-1">Select Designation</label>
             <select 

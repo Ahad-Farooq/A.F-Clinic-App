@@ -7,25 +7,32 @@ const DoctorDashboard = () => {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [prescription, setPrescription] = useState('');
   const [aiAnalysis, setAiAnalysis] = useState('');
+
+  // LIVE API URL (Aapka Vercel Backend)
+  const API_URL = "https://a-f-clinic-a0cqgk99y-ahad-farooqs-projects.vercel.app";
   
   const user = JSON.parse(localStorage.getItem('user')) || { name: 'Doctor' };
 
   // Fetch only pending patients for this specific doctor
   const fetchAppointments = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/patients/all');
-      // Status 'pending' check add kiya hai taake check-up ke baad patient list se nikal jaye
+      // Localhost ko Live URL se replace kiya
+      const res = await axios.get(`${API_URL}/api/patients/all`);
+      
       const myPatients = res.data.filter(p => 
         p.status !== 'completed' && 
         p.assignedDoctor && 
         p.assignedDoctor.includes(user.name.split(' ')[0])
       );
       setAppointments(myPatients);
-    } catch (err) { console.error(err); }
+    } catch (err) { console.error("Error fetching appointments:", err); }
   };
 
   useEffect(() => {
     fetchAppointments();
+    // Auto-refresh every 10 seconds to see new incoming patients
+    const interval = setInterval(fetchAppointments, 10000);
+    return () => clearInterval(interval);
   }, [user.name]);
 
   const handleCheckup = async (patient) => {
@@ -33,7 +40,8 @@ const DoctorDashboard = () => {
     setAiAnalysis("AI is thinking... 🧠");
 
     try {
-      const res = await axios.post('http://localhost:5000/api/ai/analyze', {
+      // Live URL for AI analysis
+      const res = await axios.post(`${API_URL}/api/ai/analyze`, {
         name: patient.name,
         age: patient.age,
         gender: patient.gender
@@ -44,12 +52,12 @@ const DoctorDashboard = () => {
     }
   };
 
-  // Naya Function: Patient treatment khatam karke archive karne ke liye
   const handleCompleteConsultation = async () => {
     if (!prescription) return alert("Please write a prescription before completing!");
     
     try {
-      await axios.put(`http://localhost:5000/api/patients/update/${selectedPatient._id}`, {
+      // Live URL for updating patient status to archived
+      await axios.put(`${API_URL}/api/patients/update/${selectedPatient._id}`, {
         status: 'completed',
         prescription: prescription
       });
@@ -57,9 +65,9 @@ const DoctorDashboard = () => {
       alert("✅ Consultation Finished & Record Archived!");
       setSelectedPatient(null);
       setPrescription('');
-      fetchAppointments(); // List refresh karne ke liye
+      fetchAppointments(); 
     } catch (err) {
-      alert("Error updating record: " + err.message);
+      alert("Error updating record: " + (err.response?.data?.message || err.message));
     }
   };
 
@@ -121,7 +129,6 @@ const DoctorDashboard = () => {
             
             {activeTab === 'appointments' ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in fade-in duration-500">
-                {/* QUEUE */}
                 <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden h-fit">
                   <div className="p-6 bg-slate-50/50 border-b flex justify-between items-center">
                     <h3 className="font-black text-slate-800">Incoming Patients</h3>
@@ -149,11 +156,10 @@ const DoctorDashboard = () => {
                   </div>
                 </div>
 
-                {/* DIAGNOSIS AREA */}
                 <div className="space-y-6">
                   {selectedPatient ? (
                     <div className="animate-in fade-in slide-in-from-bottom duration-500">
-                      <div className="bg-linear-to-br from-blue-600 to-blue-800 p-6 rounded-[2.5rem] shadow-xl mb-6 text-white relative overflow-hidden">
+                      <div className="bg-gradient-to-br from-blue-600 to-blue-800 p-6 rounded-[2.5rem] shadow-xl mb-6 text-white relative overflow-hidden">
                         <div className="relative z-10">
                           <div className="flex items-center gap-2 mb-3">
                             <span className="bg-white/20 p-1.5 rounded-lg text-sm">🤖</span>
@@ -173,7 +179,6 @@ const DoctorDashboard = () => {
                           value={prescription} 
                           onChange={(e)=>setPrescription(e.target.value)}
                         ></textarea>
-                        {/* UPDATE DABANE PAR ARCHIVE HOGA */}
                         <button 
                           onClick={handleCompleteConsultation} 
                           className="w-full mt-6 bg-blue-600 text-white py-4 rounded-2xl font-black hover:bg-blue-700 shadow-lg text-[10px] uppercase tracking-widest italic"
@@ -200,7 +205,6 @@ const DoctorDashboard = () => {
                 <button onClick={() => setActiveTab('appointments')} className="mt-8 text-blue-600 font-black text-[10px] hover:underline uppercase tracking-widest border-2 border-blue-600 px-6 py-2 rounded-full italic transition">Back to OPD</button>
               </div>
             )}
-
           </div>
         </main>
       </div>

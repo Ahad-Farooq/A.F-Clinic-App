@@ -7,6 +7,9 @@ const Dashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
   
+  // LIVE API URL (Aapka Vercel Backend)
+  const API_URL = "https://a-f-clinic-a0cqgk99y-ahad-farooqs-projects.vercel.app";
+
   const [formData, setFormData] = useState({ 
     name: '', age: '', gender: 'Male', contact: '', assignedDoctor: '' 
   });
@@ -24,21 +27,32 @@ const Dashboard = () => {
 
   const fetchPatients = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/patients/all');
+      // Localhost ko Live URL se badal diya
+      const res = await axios.get(`${API_URL}/api/patients/all`);
       setPatients(res.data);
-    } catch (err) { console.error("Fetch error", err); }
+    } catch (err) { 
+      console.error("Fetch error", err); 
+    }
   };
 
-  useEffect(() => { fetchPatients(); }, []);
+  useEffect(() => { 
+    fetchPatients(); 
+    // Live update ke liye interval set kiya (Optional)
+    const interval = setInterval(fetchPatients, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:5000/api/patients/add', formData);
+      // Localhost ko Live URL se badal diya
+      await axios.post(`${API_URL}/api/patients/add`, formData);
       alert("✅ Patient Registered Successfully");
       setFormData({ name: '', age: '', gender: 'Male', contact: '', assignedDoctor: '' });
       fetchPatients();
-    } catch (err) { alert("Error adding patient"); }
+    } catch (err) { 
+      alert("Error adding patient: " + (err.response?.data?.message || err.message)); 
+    }
   };
 
   const handleLogout = () => {
@@ -46,6 +60,7 @@ const Dashboard = () => {
     window.location.href = '/';
   };
 
+  // Rest of your UI remains the same...
   return (
     <div className="flex h-screen bg-[#F8FAFC] text-[#1E293B]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       
@@ -100,7 +115,6 @@ const Dashboard = () => {
           <div className="max-w-7xl mx-auto">
             
             {activeTab === 'dashboard' ? (
-              /* REGISTRATION DESK VIEW */
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
                 <div className="lg:col-span-1">
                   <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
@@ -131,22 +145,24 @@ const Dashboard = () => {
                         <tr><th className="p-6">Token</th><th className="p-6">Patient</th><th className="p-6">Specialist</th><th className="p-6 text-right">Action</th></tr>
                       </thead>
                       <tbody className="divide-y divide-slate-50">
-                        {/* Sirf Pending Patients dikhana */}
-                        {patients.filter(p => p.status !== 'completed').map((p, index) => (
-                          <tr key={index} className="hover:bg-slate-50/50 transition-all font-medium italic">
-                            <td className="p-6 font-black text-blue-600 text-lg">#{index + 101}</td>
-                            <td className="p-6"><div className="font-extrabold text-slate-800 uppercase text-xs">{p.name}</div><div className="text-[10px] text-slate-400 font-bold uppercase">{p.age} Yrs • {p.gender}</div></td>
-                            <td className="p-6 text-sm font-bold text-slate-600 uppercase">{p.assignedDoctor.split(' (')[0]}</td>
-                            <td className="p-6 text-right"><button onClick={() => {setSelectedPatient(p); setIsModalOpen(true);}} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600">Open Pass</button></td>
-                          </tr>
-                        ))}
+                        {patients.filter(p => p.status !== 'completed').length > 0 ? (
+                          patients.filter(p => p.status !== 'completed').map((p, index) => (
+                            <tr key={index} className="hover:bg-slate-50/50 transition-all font-medium italic">
+                              <td className="p-6 font-black text-blue-600 text-lg">#{index + 101}</td>
+                              <td className="p-6"><div className="font-extrabold text-slate-800 uppercase text-xs">{p.name}</div><div className="text-[10px] text-slate-400 font-bold uppercase">{p.age} Yrs • {p.gender}</div></td>
+                              <td className="p-6 text-sm font-bold text-slate-600 uppercase">{p.assignedDoctor.split(' (')[0]}</td>
+                              <td className="p-6 text-right"><button onClick={() => {setSelectedPatient(p); setIsModalOpen(true);}} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600">Open Pass</button></td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr><td colSpan="4" className="p-10 text-center text-slate-300 font-bold uppercase italic text-[10px]">No active appointments</td></tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
                 </div>
               </div>
             ) : activeTab === 'records' ? (
-              /* COMPLETED RECORDS VIEW */
               <div className="bg-white rounded-[3rem] shadow-sm border border-slate-100 overflow-hidden animate-in fade-in duration-500">
                 <div className="p-10 bg-slate-900 text-white">
                   <h3 className="text-3xl font-black italic tracking-tighter uppercase">A.F Medical Archives</h3>
@@ -175,7 +191,6 @@ const Dashboard = () => {
                 </div>
               </div>
             ) : (
-              /* ROSTER VIEW */
               <div className="bg-white rounded-[3rem] shadow-sm border border-slate-100 overflow-hidden animate-in zoom-in duration-500">
                 <div className="p-10 bg-slate-900 text-white"><h3 className="text-3xl font-black italic tracking-tighter">Physician Roster</h3><p className="text-slate-400 text-xs font-bold uppercase mt-2">Staff Availability Schedule</p></div>
                 <div className="p-6"><table className="w-full text-left font-semibold text-sm">

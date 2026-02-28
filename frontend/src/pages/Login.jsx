@@ -7,6 +7,9 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
+  // LIVE API URL
+  const API_URL = "https://a-f-clinic-a0cqgk99y-ahad-farooqs-projects.vercel.app";
+
   // Jab bhi koi is page par aaye, purana session clear ho jaye
   useEffect(() => {
     localStorage.clear();
@@ -15,13 +18,14 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', { email, password });
+      // Localhost ko Live URL se replace kiya
+      const res = await axios.post(`${API_URL}/api/auth/login`, { email, password });
       
       // Token aur User Info save karna
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
       
-      alert('Login Successful!');
+      alert('✅ Login Successful!');
 
       // ROLE BASED REDIRECT LOGIC
       if (res.data.user.role === 'doctor') {
@@ -31,7 +35,7 @@ const Login = () => {
       }
       
     } catch (err) {
-      alert(err.response?.data?.message || 'Login Failed. Please check credentials.');
+      alert(err.response?.data?.message || '❌ Login Failed. Please check credentials.');
     }
   };
 
